@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiTarget, FiAlertTriangle } from 'react-icons/fi';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import CircularKPIComparison from './CircularKPIComparison';
 import * as XLSX from 'xlsx';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../api/axiosClient';
+import axiosClient from '../api/axiosClient';
+import { getProject } from '../api/projects';
+import { getObjective, getSubjective } from '../api/sqa';
+import { getCommonMetrics, getAverageMetrics, compareResults } from '../api/sqaResults';
 
 const VersionComparison = ({ currentVersionId, projectId }) => {
   const [showComparison, setShowComparison] = useState(false);
@@ -118,7 +121,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
 
   const fetchVersions = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
+      const response = await getProject(projectId);
       const versionsList = response.data.versions || [];
       setVersions(versionsList);
     } catch (error) {
@@ -131,10 +134,10 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       // Use the correct endpoint based on SQA type
       let response;
       if (sqaType === 'objective') {
-        response = await axios.get(`${API_BASE_URL}/api/objective/${versionId}`);
+        response = await getObjective(versionId);
       } else {
         // subjective or default
-        response = await axios.get(`${API_BASE_URL}/api/subjective/${versionId}`);
+        response = await getSubjective(versionId);
       }
       
       const resultKey = `${versionId}_${sqaType}`;
@@ -161,7 +164,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
     setLoadingMetrics(true);
     try {
       // Fetch common metrics from first two results, then check others
-      const response = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+      const response = await getCommonMetrics({
         resultIdA: resultIds[0],
         resultIdB: resultIds[1]
       });
@@ -171,7 +174,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       // Check if other results have the same metrics
       if (resultIds.length > 2) {
         for (let i = 2; i < resultIds.length; i++) {
-          const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+          const checkResponse = await getCommonMetrics({
             resultIdA: resultIds[0],
             resultIdB: resultIds[i]
           });
@@ -316,7 +319,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       
       if (!metricsToUse || metricsToUse.length === 0) {
         // Fetch common metrics from first two results
-        const metricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+        const metricsResponse = await getCommonMetrics({
           resultIdA: resultIds[0],
           resultIdB: resultIds[1]
         });
@@ -325,7 +328,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         // Check other results
         if (resultIds.length > 2) {
           for (let i = 2; i < resultIds.length; i++) {
-            const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+            const checkResponse = await getCommonMetrics({
               resultIdA: resultIds[0],
               resultIdB: resultIds[i]
             });
@@ -354,7 +357,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         for (let i = 0; i < resultIds.length; i++) {
           try {
             // Compare with first result to get average
-            const response = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+            const response = await getAverageMetrics({
               resultIdA: resultIds[0],
               resultIdB: resultIds[i],
               metricName,
@@ -424,10 +427,10 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       
       // Send the metric name as-is first (backend handles flexible matching)
       // The backend will handle case-insensitive matching and variations like "Noise Suppression" vs "noise suppression"
-      const response = await axios.post(`${API_BASE_URL}/api/sqa-results/compare`, {
+      const response = await compareResults({
         resultIdA: resultA,
         resultIdB: resultB,
-        metricName: metricName.trim(), // Trim whitespace
+        metricName: metricName.trim(),
         metricNumberA: null,
         metricNumberB: null
       });
@@ -518,7 +521,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         // Get common metrics
         let commonMetrics = [];
         try {
-          const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+          const commonMetricsResponse = await getCommonMetrics({
             resultIdA: resultIdA,
             resultIdB: resultIdB
           });
@@ -549,7 +552,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
           
           for (const metricName of commonMetrics) {
             try {
-              const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+              const avgResponse = await getAverageMetrics({
                 resultIdA: baselineResultId,
                 resultIdB: sel.resultId,
                 metricName: metricName,
@@ -627,11 +630,10 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
           // Fetch Excel file - normalize path like ExcelMetricVisualization does
           const filePath = result.finalExcel.filePath || result.finalExcel.filepath;
           const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-          const fileUrl = `${API_BASE_URL}/uploads/${normalizedPath}`;
           
-          console.log(`[NoiseLevel] Loading Excel file from: ${fileUrl}`);
+          console.log(`[NoiseLevel] Loading Excel file from: /uploads/${normalizedPath}`);
           
-          const excelResponse = await axios.get(fileUrl, {
+          const excelResponse = await axiosClient.get(`/uploads/${normalizedPath}`, {
             responseType: 'arraybuffer',
             timeout: 30000
           });

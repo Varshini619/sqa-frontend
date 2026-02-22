@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
-import { API_BASE_URL } from '../config';
+import { getVersion } from '../api/versions';
+import { getProject } from '../api/projects';
 
 const VersionPage = () => {
   const { versionId } = useParams();
@@ -19,12 +19,12 @@ const VersionPage = () => {
 
   const fetchVersionData = async () => {
     try {
-      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
+      const versionResponse = await getVersion(versionId);
       setVersion(versionResponse.data);
       
       if (versionResponse.data.projectId) {
-        const projectResponse = await axios.get(
-          `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
+        const projectResponse = await getProject(
+          versionResponse.data.projectId._id || versionResponse.data.projectId
         );
         setProject(projectResponse.data);
       }
@@ -51,7 +51,6 @@ const VersionPage = () => {
     project?._id ||
     null;
 
-  // Combine project name and version name for navigation bar (e.g., "SoloVoice Version-3")
   const projectNameWithVersion = versionNumber 
     ? `${projectName} ${versionNumber}`
     : projectName;
@@ -125,4 +124,3 @@ const VersionPage = () => {
 };
 
 export default VersionPage;
-

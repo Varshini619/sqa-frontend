@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import ProjectComparison from '../components/ProjectComparison';
 import { FiPlus, FiTrash2, FiBarChart2 } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { getProjects, createProject, deleteProject } from '../api/projects';
+import { createVersion } from '../api/versions';
 
 // Hero Headline Component with Word-by-Word Animation
 const HeroHeadline = ({ text }) => {
@@ -78,7 +78,7 @@ const Home = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects`);
+      const response = await getProjects();
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -90,7 +90,7 @@ const Home = () => {
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/projects`, {
+      await createProject({
         name: newProjectName,
         description: newProjectDesc
       });
@@ -113,7 +113,7 @@ const Home = () => {
   const handleCreateVersion = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/versions`, {
+      await createVersion({
         projectId: selectedProject._id,
         versionNumber: newVersionNumber,
         description: newVersionDesc
@@ -130,35 +130,18 @@ const Home = () => {
   };
 
   const handleDeleteProject = async (projectId, projectName, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking delete button
+    e.stopPropagation();
     if (!window.confirm(`Are you sure you want to delete "${projectName}"? This will also delete all versions associated with this project.`)) {
       return;
     }
 
     try {
-      console.log('Attempting to delete project:', { projectId, projectName });
-      const url = `${API_BASE_URL}/api/projects/${projectId}`;
-      console.log('Delete URL:', url);
-      
-      const response = await axios.delete(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      console.log('Delete response:', response.data);
+      await deleteProject(projectId);
       alert('Project deleted successfully!');
       fetchProjects();
     } catch (error) {
       console.error('Error deleting project:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Failed to delete project';
-      console.error('Error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: errorMessage,
-        url: error.config?.url
-      });
       alert(`Failed to delete project: ${errorMessage}`);
     }
   };
@@ -251,7 +234,6 @@ const Home = () => {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProjects.map((project) => {
-            // Check if this project matches the search term
             const isHighlighted = searchTerm.trim() && (
               (project.name || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
               (project.description || '').toLowerCase().includes(searchTerm.toLowerCase().trim())
@@ -529,4 +511,3 @@ const Home = () => {
 };
 
 export default Home;
-

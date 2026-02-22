@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import PublicLayout from '../components/PublicLayout';
 import ExcelMetricVisualization from '../components/ExcelMetricVisualization';
 import { FiDownload, FiFile, FiAlertCircle } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../api/axiosClient';
+import { getPublicShareLink } from '../api/shareLinks';
+import { downloadUpload } from '../api/uploads';
 
 const PublicSQAPage = () => {
   const { token } = useParams();
@@ -24,15 +25,7 @@ const PublicSQAPage = () => {
       
       console.log('Fetching public data for token:', token?.substring(0, 10) + '...');
       
-      const response = await axios.get(
-        `${API_BASE_URL}/api/share-links/public/${token}`,
-        {
-          timeout: 30000, // 30 second timeout
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await getPublicShareLink(token);
       
       console.log('Public data received:', {
         hasVersion: !!response.data?.version,
@@ -71,10 +64,7 @@ const PublicSQAPage = () => {
 
   const handleDownload = async (filePath, fileName) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/uploads/${filePath}`,
-        { responseType: 'blob' }
-      );
+      const response = await downloadUpload(filePath, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;

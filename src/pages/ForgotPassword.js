@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { forgotPassword } from '../api/auth';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -19,36 +18,22 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/forgot-password`, {
-        email
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await forgotPassword(email);
 
       setSuccess(response.data.message);
       
-      // In development, show the reset link
       if (response.data.resetLink) {
         setResetLink(response.data.resetLink);
       }
-      
-      // In production, you would send an email instead
     } catch (error) {
       console.error('Forgot password error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error request:', error.request);
       
       if (error.response) {
-        // Server responded with error status
         const errorMessage = error.response.data?.message || error.response.data?.error || 'Failed to process request. Please try again.';
         setError(errorMessage);
       } else if (error.request) {
-        // Request made but no response received
         setError('Cannot connect to server. Please make sure the backend server is running on port 5000.');
       } else {
-        // Something else happened
         setError(`An error occurred: ${error.message || 'Please try again.'}`);
       }
     } finally {
@@ -137,4 +122,3 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
-

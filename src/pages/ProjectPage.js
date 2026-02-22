@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import VersionComparison from '../components/VersionComparison';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { getProject } from '../api/projects';
+import { createVersion, deleteVersion } from '../api/versions';
 
 const ProjectPage = () => {
   const { projectId } = useParams();
@@ -24,7 +24,7 @@ const ProjectPage = () => {
 
   const fetchProjectData = async () => {
     try {
-      const projectResponse = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
+      const projectResponse = await getProject(projectId);
       setProject(projectResponse.data);
       setVersions(projectResponse.data.versions || []);
     } catch (error) {
@@ -37,7 +37,7 @@ const ProjectPage = () => {
   const handleCreateVersion = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/versions`, {
+      await createVersion({
         projectId: projectId,
         versionNumber: newVersionNumber,
         description: newVersionDesc
@@ -57,17 +57,13 @@ const ProjectPage = () => {
   };
 
   const handleDeleteVersion = async (versionId, versionNumber, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking delete button
+    e.stopPropagation();
     if (!window.confirm(`Are you sure you want to delete version "${versionNumber}"? This will also delete all data associated with this version.`)) {
       return;
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/versions/${versionId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      await deleteVersion(versionId);
       alert('Version deleted successfully!');
       fetchProjectData();
     } catch (error) {
@@ -257,4 +253,3 @@ const ProjectPage = () => {
 };
 
 export default ProjectPage;
-

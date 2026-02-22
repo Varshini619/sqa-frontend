@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import { FiUpload, FiDownload, FiTrash2, FiSave } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { getVersion } from '../api/versions';
+import { getProject } from '../api/projects';
+import { API_BASE_URL } from '../api/axiosClient';
+import {
+  getDevelopment,
+  updateDevelopment,
+  uploadFiles,
+  uploadFolders,
+  deleteFile,
+  deleteFolder,
+} from '../api/development';
 
 const DevelopmentPage = () => {
   const { versionId } = useParams();
@@ -24,10 +33,10 @@ const DevelopmentPage = () => {
 
   const fetchProjectInfo = async () => {
     try {
-      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
+      const versionResponse = await getVersion(versionId);
       if (versionResponse.data.projectId) {
-        const projectResponse = await axios.get(
-          `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
+        const projectResponse = await getProject(
+          versionResponse.data.projectId._id || versionResponse.data.projectId
         );
         setProjectName(projectResponse.data.name);
       }
@@ -38,7 +47,7 @@ const DevelopmentPage = () => {
 
   const fetchDevelopmentData = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/development/${versionId}`);
+      const response = await getDevelopment(versionId);
       setDevelopment(response.data);
       setNotes(response.data.notes || '');
     } catch (error) {
@@ -50,9 +59,7 @@ const DevelopmentPage = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/api/development/${versionId}`, {
-        notes
-      });
+      await updateDevelopment(versionId, { notes });
       alert('Saved successfully!');
       fetchDevelopmentData();
     } catch (error) {
@@ -67,10 +74,7 @@ const DevelopmentPage = () => {
       formData.append('file', file);
       formData.append('versionId', versionId);
 
-      await axios.post(`${API_BASE_URL}/api/development/${versionId}/files`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
+      await uploadFiles(versionId, formData);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -87,10 +91,7 @@ const DevelopmentPage = () => {
       formData.append('versionId', versionId);
       formData.append('folderName', `Folder_${Date.now()}`);
 
-      await axios.post(`${API_BASE_URL}/api/development/${versionId}/folders`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
+      await uploadFolders(versionId, formData);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error uploading folder:', error);
@@ -102,7 +103,7 @@ const DevelopmentPage = () => {
     if (!window.confirm('Are you sure you want to delete this file?')) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/development/${versionId}/files/${fileId}`);
+      await deleteFile(versionId, fileId);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error deleting file:', error);
@@ -114,7 +115,7 @@ const DevelopmentPage = () => {
     if (!window.confirm('Are you sure you want to delete this folder?')) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/development/${versionId}/folders/${folderId}`);
+      await deleteFolder(versionId, folderId);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error deleting folder:', error);
@@ -123,7 +124,6 @@ const DevelopmentPage = () => {
   };
 
   const handleDownload = (filePath, fileName) => {
-    // File path is already relative from uploads directory
     window.open(`${API_BASE_URL}/uploads/${filePath}`, '_blank');
   };
 
@@ -316,4 +316,3 @@ const DevelopmentPage = () => {
 };
 
 export default DevelopmentPage;
-

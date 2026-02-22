@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { FiShare2, FiCopy, FiCheck, FiX, FiExternalLink } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { getShareLinks, generateShareLink as apiGenerateShareLink, deleteShareLink } from '../api/shareLinks';
 
 const ShareLink = ({ versionId, type }) => {
   const [shareLink, setShareLink] = useState(null);
@@ -28,16 +27,7 @@ const ShareLink = ({ versionId, type }) => {
         return;
       }
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/share-links/${versionId}/${type}`,
-        {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 10000 // 10 second timeout
-        }
-      );
+      const response = await getShareLinks(versionId, type);
 
       if (response.data && response.data.shareLink) {
         setShareLink(response.data.shareLink);
@@ -88,21 +78,11 @@ const ShareLink = ({ versionId, type }) => {
 
       console.log('Generating share link:', { versionId, type, expiresInDays: expiresInDaysValue });
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/share-links/generate`,
-        {
-          versionId,
-          type,
-          expiresInDays: expiresInDaysValue
-        },
-        {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 30000 // 30 second timeout
-        }
-      );
+      const response = await apiGenerateShareLink({
+        versionId,
+        type,
+        expiresInDays: expiresInDaysValue
+      });
 
       if (response.data && response.data.shareLink) {
         setShareLink(response.data.shareLink);
@@ -152,13 +132,7 @@ const ShareLink = ({ versionId, type }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `${API_BASE_URL}/api/share-links/${shareLink.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await deleteShareLink(shareLink.id);
 
       setShareLink(null);
     } catch (error) {

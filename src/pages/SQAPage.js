@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
@@ -8,7 +7,11 @@ import QuadrantView from '../components/QuadrantView';
 import ExcelMetricVisualization from '../components/ExcelMetricVisualization';
 import ProjectReferences from '../components/ProjectReferences';
 import ShareLink from '../components/ShareLink';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../api/axiosClient';
+import { getVersion } from '../api/versions';
+import { getProject } from '../api/projects';
+import { getObjective, uploadObjective, deleteObjective, getSubjective, uploadSubjective, updateSubjective, deleteSubjective, getReports, uploadReport, deleteReport, filterSqa } from '../api/sqa';
+import { getVersionMetrics } from '../api/sqaResults';
 import {
   FiUpload,
   FiDownload,
@@ -122,7 +125,7 @@ const SQAPage = () => {
 
   const fetchProjectInfo = useCallback(async () => {
     try {
-      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
+      const versionResponse = await getVersion(versionId);
       if (versionResponse.data) {
         // Set version number
         if (versionResponse.data.versionNumber) {
@@ -130,9 +133,7 @@ const SQAPage = () => {
         }
         // Fetch project name
         if (versionResponse.data.projectId) {
-          const projectResponse = await axios.get(
-            `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
-          );
+          const projectResponse = await getProject(versionResponse.data.projectId._id || versionResponse.data.projectId);
           setProjectName(projectResponse.data.name);
         }
       }
@@ -146,7 +147,7 @@ const SQAPage = () => {
       if (type === 'objective') {
         // Use separate Objective API - only interacts with objective_results collection
         console.log('[FRONTEND] Fetching objective results from /api/objective');
-        const response = await axios.get(`${API_BASE_URL}/api/objective/${versionId}`);
+        const response = await getObjective(versionId);
         console.log('[FRONTEND] Objective results received:', response.data.length);
         
         // Transform Objective Results to match the reports format for display
@@ -163,9 +164,7 @@ const SQAPage = () => {
         // For subjective, fetch ONLY SQA Reports (not SQA Results)
         // This endpoint returns SQAReport documents with type='subjective'
         console.log('[FRONTEND] Fetching subjective reports from /api/sqa/reports');
-        const response = await axios.get(
-          `${API_BASE_URL}/api/sqa/reports/${versionId}?type=subjective`
-        );
+        const response = await getReports(versionId, 'subjective');
         console.log('[FRONTEND] Subjective reports received:', response.data.length);
         
         // Additional filter to ensure we only get subjective reports
@@ -197,7 +196,7 @@ const SQAPage = () => {
       }
       // Use separate Subjective API - only interacts with subjective_results collection
       console.log('[FRONTEND] Fetching subjective results from /api/subjective for versionId:', versionId);
-      const response = await axios.get(`${API_BASE_URL}/api/subjective/${versionId}`);
+      const response = await getSubjective(versionId);
       console.log('[FRONTEND] Subjective results received:', response.data);
       console.log('[FRONTEND] Number of results:', response.data.length);
       
@@ -396,7 +395,7 @@ const SQAPage = () => {
       // Initialize default metrics first
       initializeDefaultMetrics();
       
-      const response = await axios.get(`${API_BASE_URL}/api/sqa-results/version-metrics/${versionId}`);
+      const response = await getVersionMetrics(versionId);
       const backendMetrics = response.data.metrics || [];
       
       // Load custom metrics from localStorage (version-specific and global)
@@ -456,7 +455,7 @@ const SQAPage = () => {
     setLoadingMetrics(true);
     try {
       initializeDefaultMetrics();
-      const response = await axios.get(`${API_BASE_URL}/api/sqa-results/version-metrics/${versionId}`);
+      const response = await getVersionMetrics(versionId);
       const backendMetrics = response.data.metrics || [];
       const versionCustomMetrics = loadCustomMetrics();
       const globalCustomMetrics = loadGlobalCustomMetrics();
@@ -671,9 +670,7 @@ const SQAPage = () => {
       formData.append('versionId', versionId);
       formData.append('type', type);
 
-      await axios.post(`${API_BASE_URL}/api/sqa/reports/upload/${versionId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await uploadReport(versionId, formData);
 
       // Refresh ONLY subjective reports
       await fetchReports('subjective');
@@ -695,9 +692,7 @@ const SQAPage = () => {
       formData.append('finalExcel', excelFile);
 
       // Use separate Objective API - only interacts with objective_results collection
-      await axios.post(`${API_BASE_URL}/api/objective/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await uploadObjective(formData);
 
       console.log('[FRONTEND] Objective result uploaded successfully');
       
@@ -771,9 +766,7 @@ const SQAPage = () => {
 
       // Use separate Subjective API - only interacts with subjective_results collection
       console.log('[FRONTEND] Uploading subjective result:', normalizedName);
-      const response = await axios.post(`${API_BASE_URL}/api/subjective/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await uploadSubjective(formData);
 
       console.log('[FRONTEND] Subjective result uploaded successfully:', response.data);
 
@@ -860,9 +853,7 @@ const SQAPage = () => {
 
       // Use separate Subjective API - only updates subjective_results collection
       console.log('[FRONTEND] Updating subjective result:', editingResultId);
-      await axios.put(`${API_BASE_URL}/api/subjective/${editingResultId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await updateSubjective(editingResultId, formData);
 
       console.log('[FRONTEND] Subjective result updated successfully');
       
@@ -884,7 +875,7 @@ const SQAPage = () => {
     try {
       // Use separate Subjective API - only deletes from subjective_results collection
       console.log('[FRONTEND] Deleting subjective result:', resultId);
-      await axios.delete(`${API_BASE_URL}/api/subjective/${resultId}`);
+      await deleteSubjective(resultId);
       console.log('[FRONTEND] Subjective result deleted successfully');
       fetchSqaResults();
     } catch (error) {
@@ -900,14 +891,14 @@ const SQAPage = () => {
       if (type === 'objective') {
         // Use separate Objective API - only deletes from objective_results collection
         console.log('[FRONTEND] Deleting objective result:', reportId);
-        await axios.delete(`${API_BASE_URL}/api/objective/${reportId}`);
+        await deleteObjective(reportId);
         console.log('[FRONTEND] Objective result deleted successfully');
         // Refresh ONLY objective reports
         await fetchReports('objective');
       } else if (type === 'subjective') {
         // Delete SQA Report (subjective reports are stored as SQA Reports)
         console.log('[FRONTEND] Deleting subjective report:', reportId);
-        await axios.delete(`${API_BASE_URL}/api/sqa/reports/${reportId}`);
+        await deleteReport(reportId);
         console.log('[FRONTEND] Subjective report deleted successfully');
         // Refresh ONLY subjective reports
         await fetchReports('subjective');
@@ -945,7 +936,7 @@ const SQAPage = () => {
 
     setLoadingFilter(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/sqa/${versionId}/filter`, {
+      const response = await filterSqa(versionId, {
         metric: filters.metric || undefined,
         operation: filters.operation || undefined,
         value: filters.value || undefined,

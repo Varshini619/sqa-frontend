@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
-import axios from 'axios';
 import {
   BarChart,
   Bar,
@@ -13,7 +12,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { FiFileText, FiImage, FiSearch } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import { downloadUpload } from '../api/uploads';
 
 const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -137,13 +136,12 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
       // Handle both filePath formats (with or without leading slash)
       const filePath = report.filePath || report.filepath;
       const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-      const fileUrl = `${API_BASE_URL}/uploads/${normalizedPath}`;
       
-      console.log('Loading Excel file from:', fileUrl);
+      console.log('Loading Excel file:', normalizedPath);
       
-      const response = await axios.get(fileUrl, {
+      const response = await downloadUpload(normalizedPath, {
         responseType: 'arraybuffer',
-        timeout: 30000 // 30 second timeout
+        timeout: 30000
       });
       const arrayBuffer = response.data;
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiAward, FiTarget, FiBarChart2, FiArrowRight } from 'react-icons/fi';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
-import { API_BASE_URL } from '../config';
+import { getProjects, getProject } from '../api/projects';
+import { getObjective, getSubjective } from '../api/sqa';
+import { getCommonMetrics, getAverageMetrics } from '../api/sqaResults';
 
 const ProjectComparison = ({ onClose }) => {
   const [projects, setProjects] = useState([]);
@@ -132,7 +133,7 @@ const ProjectComparison = ({ onClose }) => {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects`);
+      const response = await getProjects();
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -141,7 +142,7 @@ const ProjectComparison = ({ onClose }) => {
 
   const fetchProjectVersions = async (projectId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
+      const response = await getProject(projectId);
       const versionsList = response.data.versions || [];
       setProjectVersions(prev => ({ ...prev, [projectId]: versionsList }));
       
@@ -167,10 +168,10 @@ const ProjectComparison = ({ onClose }) => {
       // Use the correct endpoint based on SQA type
       let response;
       if (sqaType === 'objective') {
-        response = await axios.get(`${API_BASE_URL}/api/objective/${versionId}`);
+        response = await getObjective(versionId);
       } else {
         // subjective or default
-        response = await axios.get(`${API_BASE_URL}/api/subjective/${versionId}`);
+        response = await getSubjective(versionId);
       }
       
       const resultKey = `${versionId}_${sqaType}`;
@@ -200,7 +201,7 @@ const ProjectComparison = ({ onClose }) => {
     setLoadingMetrics(true);
     try {
       // Fetch common metrics from first two results, then check others
-      const response = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+      const response = await getCommonMetrics({
         resultIdA: resultIds[0],
         resultIdB: resultIds[1]
       });
@@ -238,7 +239,7 @@ const ProjectComparison = ({ onClose }) => {
       // Check if other results have the same metrics (using flexible matching)
       if (resultIds.length > 2) {
         for (let i = 2; i < resultIds.length; i++) {
-          const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+          const checkResponse = await getCommonMetrics({
             resultIdA: resultIds[0],
             resultIdB: resultIds[i]
           });
@@ -487,7 +488,7 @@ const ProjectComparison = ({ onClose }) => {
             // Get common metrics from first two results
             if (resultIds.length >= 2) {
               try {
-                const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+                const commonMetricsResponse = await getCommonMetrics({
                   resultIdA: resultIds[0],
                   resultIdB: resultIds[1]
                 });
@@ -496,7 +497,7 @@ const ProjectComparison = ({ onClose }) => {
                 // Check other results to find truly common metrics
                 if (resultIds.length > 2) {
                   for (let i = 2; i < resultIds.length; i++) {
-                    const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+                    const checkResponse = await getCommonMetrics({
                       resultIdA: resultIds[0],
                       resultIdB: resultIds[i]
                     });
@@ -521,7 +522,7 @@ const ProjectComparison = ({ onClose }) => {
                   for (const resultId of resultIds) {
                     try {
                       // Compare with first result to get average
-                      const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+                      const avgResponse = await getAverageMetrics({
                         resultIdA: resultIds[0],
                         resultIdB: resultId,
                         metricName: metricName
@@ -576,7 +577,7 @@ const ProjectComparison = ({ onClose }) => {
             if (hasExcelFiles && resultIds.length >= 2) {
               try {
                 // Try to get common metrics from Excel files if available
-                const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+                const commonMetricsResponse = await getCommonMetrics({
                   resultIdA: resultIds[0],
                   resultIdB: resultIds[1]
                 });
@@ -592,7 +593,7 @@ const ProjectComparison = ({ onClose }) => {
                     
                     for (const resultId of resultIds) {
                       try {
-                        const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+                        const avgResponse = await getAverageMetrics({
                           resultIdA: resultIds[0],
                           resultIdB: resultId,
                           metricName: metricName
@@ -728,7 +729,7 @@ const ProjectComparison = ({ onClose }) => {
             const projectMetricsList = [];
             
             // Get common metrics
-            const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+            const commonMetricsResponse = await getCommonMetrics({
               resultIdA: baselineResultId,
               resultIdB: selection.resultId
             });
@@ -736,7 +737,7 @@ const ProjectComparison = ({ onClose }) => {
             
             for (const metricName of commonMetrics) {
               try {
-                const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+                const avgResponse = await getAverageMetrics({
                   resultIdA: baselineResultId,
                   resultIdB: selection.resultId,
                   metricName: metricName
@@ -784,7 +785,7 @@ const ProjectComparison = ({ onClose }) => {
           // Get common metrics
           let commonMetrics = [];
           try {
-            const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+            const commonMetricsResponse = await getCommonMetrics({
               resultIdA: resultIdA,
               resultIdB: resultIdB
             });
@@ -815,7 +816,7 @@ const ProjectComparison = ({ onClose }) => {
             
             for (const metricName of commonMetrics) {
               try {
-                const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+                const avgResponse = await getAverageMetrics({
                   resultIdA: baselineResultId,
                   resultIdB: sel.resultId,
                   metricName: metricName,
@@ -1005,7 +1006,7 @@ const ProjectComparison = ({ onClose }) => {
       
       if (!metricsToUse || metricsToUse.length === 0) {
         // Fetch common metrics from first two results
-        const metricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+        const metricsResponse = await getCommonMetrics({
           resultIdA: resultIds[0],
           resultIdB: resultIds[1]
         });
@@ -1014,7 +1015,7 @@ const ProjectComparison = ({ onClose }) => {
         // Check other results using flexible matching
         if (resultIds.length > 2) {
           for (let i = 2; i < resultIds.length; i++) {
-            const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
+            const checkResponse = await getCommonMetrics({
               resultIdA: resultIds[0],
               resultIdB: resultIds[i]
             });
@@ -1048,7 +1049,7 @@ const ProjectComparison = ({ onClose }) => {
         for (let i = 0; i < resultIds.length; i++) {
           try {
             // Compare with first result to get average
-            const response = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
+            const response = await getAverageMetrics({
               resultIdA: resultIds[0],
               resultIdB: resultIds[i],
               metricName,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   FiPlus,
   FiX,
@@ -12,7 +11,8 @@ import {
   FiLink,
   FiUpload
 } from 'react-icons/fi';
-import { API_BASE_URL } from '../config';
+import axiosClient from '../api/axiosClient';
+import { getProjectReferences, uploadFolder, uploadFile, createReference, updateReference, deleteReference } from '../api/projectReferences';
 
 const ProjectReferences = ({ versionId, user }) => {
   const [projectReferences, setProjectReferences] = useState([]);
@@ -38,11 +38,7 @@ const ProjectReferences = ({ versionId, user }) => {
   const fetchProjectReferences = async () => {
     try {
       setLoading(true);
-      const url = filterPlatform === 'all' 
-        ? `${API_BASE_URL}/api/project-references/version/${versionId}`
-        : `${API_BASE_URL}/api/project-references/version/${versionId}?platform=${filterPlatform}`;
-      
-      const response = await axios.get(url);
+      const response = await getProjectReferences(versionId, filterPlatform === 'all' ? null : filterPlatform);
       setProjectReferences(response.data);
     } catch (error) {
       console.error('Error fetching project references:', error);
@@ -76,12 +72,6 @@ const ProjectReferences = ({ versionId, user }) => {
       }
       
       const uploadFormData = new FormData();
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      };
       
       // Check if it's an array (folder upload) or single file
       const isArray = Array.isArray(fileOrFiles);
@@ -108,7 +98,7 @@ const ProjectReferences = ({ versionId, user }) => {
         uploadFormData.append('versionId', versionId);
         
         console.log('Uploading folder with', filesToUpload.length, 'files');
-        const response = await axios.post(`${API_BASE_URL}/api/project-references/upload-folder`, uploadFormData, config);
+        const response = await uploadFolder(uploadFormData);
         
         return response.data.folderPath || response.data.path;
       } else {
@@ -121,13 +111,8 @@ const ProjectReferences = ({ versionId, user }) => {
         uploadFormData.append('versionId', versionId);
         
         console.log('Uploading single file:', fileOrFiles.name, fileOrFiles.size, 'bytes');
-        console.log('Upload URL:', `${API_BASE_URL}/api/project-references/upload`);
-        console.log('FormData entries:');
-        for (let pair of uploadFormData.entries()) {
-          console.log('  ', pair[0], ':', pair[1] instanceof File ? `${pair[1].name} (${pair[1].size} bytes)` : pair[1]);
-        }
         
-        const response = await axios.post(`${API_BASE_URL}/api/project-references/upload`, uploadFormData, config);
+        const response = await uploadFile(uploadFormData);
         console.log('✅ Upload response:', response.status, response.data);
         
         return response.data.filePath || response.data.path;
@@ -175,13 +160,6 @@ const ProjectReferences = ({ versionId, user }) => {
         return;
       }
 
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      };
-
       const payload = editingId 
         ? { ...formData, link: finalLink || formData.link }
         : {
@@ -218,19 +196,13 @@ const ProjectReferences = ({ versionId, user }) => {
       console.log('VersionId length:', payload.versionId?.length);
 
       console.log('Making API request:', editingId ? 'PUT' : 'POST');
-      console.log('URL:', editingId 
-        ? `${API_BASE_URL}/api/project-references/${editingId}`
-        : `${API_BASE_URL}/api/project-references`);
       console.log('Payload:', { ...payload, description: payload.description?.substring(0, 50) + '...' });
-      console.log('Config headers:', config.headers);
 
       if (editingId) {
-        // Update existing
-        const response = await axios.put(`${API_BASE_URL}/api/project-references/${editingId}`, payload, config);
+        const response = await updateReference(editingId, payload);
         console.log('Update response:', response.status, response.data);
       } else {
-        // Create new
-        const response = await axios.post(`${API_BASE_URL}/api/project-references`, payload, config);
+        const response = await createReference(payload);
         console.log('Create response:', response.status, response.data);
       }
 
@@ -310,12 +282,7 @@ const ProjectReferences = ({ versionId, user }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}/api/project-references/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      await deleteReference(id);
       fetchProjectReferences();
     } catch (error) {
       console.error('Error deleting project reference:', error);
@@ -359,7 +326,7 @@ const ProjectReferences = ({ versionId, user }) => {
       if (ref.link.startsWith('http')) {
         // If it's already a full URL, download it directly
         try {
-          const response = await axios.get(ref.link, {
+          const response = await axiosClient.get(ref.link, {
             responseType: 'blob',
             timeout: 30000
           });
@@ -384,19 +351,17 @@ const ProjectReferences = ({ versionId, user }) => {
         // For file paths, construct the correct server URL
         // Remove leading slash if present, then prepend with uploads base URL
         const filePath = ref.link.startsWith('/') ? ref.link.substring(1) : ref.link;
-        const downloadUrl = `${API_BASE_URL}/uploads/${filePath}`;
         
         console.log('Downloading Audacity project:', {
           originalLink: ref.link,
           filePath: filePath,
-          downloadUrl: downloadUrl,
           title: ref.title
         });
 
         try {
-          const response = await axios.get(downloadUrl, {
+          const response = await axiosClient.get(`/uploads/${filePath}`, {
             responseType: 'blob',
-            timeout: 60000 // 60 seconds for large files/folders
+            timeout: 60000
           });
 
           const blob = new Blob([response.data]);

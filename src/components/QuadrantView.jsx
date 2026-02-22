@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../api/axiosClient';
 
 const QuadrantView = ({ quadrantData, onFileClick, filteredMetric }) => {
   const [hoveredDot, setHoveredDot] = useState(null);

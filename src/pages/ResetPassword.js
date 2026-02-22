@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { resetPassword } from '../api/auth';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -42,14 +41,10 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/reset-password`, {
-        token,
-        password
-      });
+      const response = await resetPassword(token, password);
 
       setSuccess(response.data.message);
       
-      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -142,4 +137,3 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
-
