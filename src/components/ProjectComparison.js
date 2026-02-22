@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiAward, FiTarget, FiBarChart2, FiArrowRight } from 'react-icons/fi';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line, AreaChart, Area } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
 import { API_BASE_URL } from '../config';
 
 const ProjectComparison = () => {
@@ -24,7 +23,7 @@ const ProjectComparison = () => {
   
   // Comparison result
   const [comparisonData, setComparisonData] = useState(null);
-  const [averageMetrics, setAverageMetrics] = useState(null);
+  const [, setAverageMetrics] = useState(null);
   const [loadingAverages, setLoadingAverages] = useState(false);
   
   // Dashboard data for objective SQA
@@ -54,6 +53,7 @@ const ProjectComparison = () => {
         ]);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showComparison]);
 
   // Fetch versions when a project is selected
@@ -63,6 +63,7 @@ const ProjectComparison = () => {
         fetchProjectVersions(selection.projectId);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjects]);
 
   // Fetch results when a version is selected or SQA type changes
@@ -71,14 +72,13 @@ const ProjectComparison = () => {
       if (selection.versionId) {
         const sqaType = selection.sqaType || 'subjective';
         const resultKey = `${selection.versionId}_${sqaType}`;
-        // Always fetch if we don't have results for this key, or if results array is empty
-        // This ensures results are fetched when SQA type changes
         if (!versionResults[resultKey] || (Array.isArray(versionResults[resultKey]) && versionResults[resultKey].length === 0)) {
           console.log(`[ProjectComparison] Fetching ${sqaType} results for versionId: ${selection.versionId}`);
           fetchVersionResults(selection.versionId, sqaType);
         }
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjects]);
 
   // Update versionNumber when projectVersions are loaded
@@ -92,6 +92,7 @@ const ProjectComparison = () => {
         }
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectVersions]);
 
   // Fetch available metrics when at least 2 results are selected (including "All" selections)

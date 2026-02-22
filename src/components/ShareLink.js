@@ -15,6 +15,7 @@ const ShareLink = ({ versionId, type }) => {
     if (versionId && type) {
       fetchShareLink();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId, type]);
 
   const fetchShareLink = async () => {

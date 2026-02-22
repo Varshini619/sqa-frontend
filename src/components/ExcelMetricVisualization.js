@@ -12,7 +12,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { FiDownload, FiFileText, FiImage, FiToggleLeft, FiToggleRight, FiPlus, FiX, FiSearch } from 'react-icons/fi';
+import { FiFileText, FiImage, FiSearch } from 'react-icons/fi';
 import { API_BASE_URL } from '../config';
 
 const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) => {
@@ -120,6 +120,7 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
     );
   }, [allNoiseTypes, noiseTypeSearch]);
 
+  // eslint-disable-next-line no-unused-vars
   const filteredDbLevels = useMemo(() => {
     if (!dbLevelSearch.trim()) return allDbLevels;
     const searchLower = dbLevelSearch.toLowerCase();
@@ -127,29 +128,6 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
       level.toLowerCase().includes(searchLower)
     );
   }, [allDbLevels, dbLevelSearch]);
-
-  // Functions to add custom noise types and dB levels
-  const handleAddNoiseType = () => {
-    if (newNoiseTypeInput.trim() && !allNoiseTypes.includes(newNoiseTypeInput.trim())) {
-      setCustomNoiseTypes([...customNoiseTypes, newNoiseTypeInput.trim()]);
-      setNewNoiseTypeInput('');
-    }
-  };
-
-  const handleRemoveNoiseType = (noiseType) => {
-    setCustomNoiseTypes(customNoiseTypes.filter(nt => nt !== noiseType));
-  };
-
-  const handleAddDbLevel = () => {
-    if (newDbLevelInput.trim() && !allDbLevels.includes(newDbLevelInput.trim())) {
-      setCustomDbLevels([...customDbLevels, newDbLevelInput.trim()]);
-      setNewDbLevelInput('');
-    }
-  };
-
-  const handleRemoveDbLevel = (dbLevel) => {
-    setCustomDbLevels(customDbLevels.filter(dl => dl !== dbLevel));
-  };
 
   // Load Excel file
   const loadExcelFile = async (report) => {
@@ -319,7 +297,6 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
     
     // Check if "All" dB levels are selected (all selected = all available)
     const allDbLevelsSelected = selectedDbLevels.length > 0 && selectedDbLevels.length === allDbLevels.length;
-    const allNoiseTypesSelected = selectedNoiseTypes.length > 0 && selectedNoiseTypes.length === allNoiseTypes.length;
     
     // Determine what to show based on selections
     const noiseTypesToShow = selectedNoiseTypes.length > 0 
@@ -583,6 +560,7 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
     });
     
     return fallbackResult.length > 0 ? fallbackResult : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredData, detectedColumns, selectedNoiseTypes, allNoiseTypes]);
 
   // Calculate summary statistics
@@ -1025,11 +1003,6 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
                             // Check if these keys are dB levels (by checking if they match dB level patterns)
                             const areDbLevels = barKeys.some(key => 
                               allDbLevels.includes(key) || /^\d+db$/i.test(key) || /^\d+snr$/i.test(key)
-                            );
-                            
-                            // Check if these keys are noise types (by checking if they match noise type patterns)
-                            const areNoiseTypes = barKeys.some(key => 
-                              allNoiseTypes.includes(key)
                             );
                             
                             // If they're dB levels, use them as bars

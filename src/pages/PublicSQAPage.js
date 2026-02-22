@@ -14,6 +14,7 @@ const PublicSQAPage = () => {
 
   useEffect(() => {
     fetchPublicData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchPublicData = async () => {

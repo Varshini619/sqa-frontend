@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useContext } from 'react';
-import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import { FiUpload, FiDownload, FiTrash2, FiSave } from 'react-icons/fi';
 import { API_BASE_URL } from '../config';
@@ -10,7 +8,6 @@ import { API_BASE_URL } from '../config';
 const DevelopmentPage = () => {
   const { versionId } = useParams();
   const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
 
   const [development, setDevelopment] = useState(null);
   const [notes, setNotes] = useState('');
@@ -22,6 +19,7 @@ const DevelopmentPage = () => {
   useEffect(() => {
     fetchDevelopmentData();
     fetchProjectInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId]);
 
   const fetchProjectInfo = async () => {

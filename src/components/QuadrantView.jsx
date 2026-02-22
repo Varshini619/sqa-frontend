@@ -1,11 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FiDownload } from 'react-icons/fi';
+import React, { useState, useRef } from 'react';
 import { API_BASE_URL } from '../config';
 
 const QuadrantView = ({ quadrantData, onFileClick, filteredMetric }) => {
   const [hoveredDot, setHoveredDot] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const containerRef = useRef(null);
 
   // Helper function to check if a quadrant matches the filtered metric
   const isFilteredQuadrant = (quadrantKey) => {

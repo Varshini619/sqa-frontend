@@ -1,6 +1,4 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
 import { FiSearch, FiArrowLeft } from 'react-icons/fi';
 import Logo from './Logo';
@@ -13,7 +11,6 @@ const NavigationBar = ({
   rightButton,
   onBack
 }) => {
-  const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
 
   return (

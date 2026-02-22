@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiAward, FiTarget, FiBarChart2, FiAlertTriangle } from 'react-icons/fi';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiTarget, FiAlertTriangle } from 'react-icons/fi';
+import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import CircularKPIComparison from './CircularKPIComparison';
 import * as XLSX from 'xlsx';
 import { API_BASE_URL } from '../config';
@@ -74,7 +74,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         ]);
       }
     }
-  }, [showComparison, projectId]);
+  }, [showComparison, projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update versionNumber when versions are loaded and currentVersionId is set
   useEffect(() => {
@@ -104,7 +104,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         }
       }
     });
-  }, [selectedVersions]);
+  }, [selectedVersions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch available metrics when at least 2 results are selected
   useEffect(() => {
@@ -1998,7 +1998,6 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
                       averageMetrics.metrics.map((metric, idx) => {
                         const maxScore = 5;
                         const containerHeight = 240;
-                        const barWidth = 60;
                         const numVersions = comparisonData.versions.length;
                         const barGroupWidth = Math.max(60, numVersions * 8);
                         

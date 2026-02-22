@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 /**
  * PublicLayout - Isolated layout for customer access
@@ -10,28 +10,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
  */
 const PublicLayout = ({ children }) => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Prevent navigation away from public routes
-    const handleRouteChange = (e) => {
-      const currentPath = window.location.pathname;
-      
-      // If user tries to navigate away from public route, prevent it
-      if (currentPath.startsWith('/public/')) {
-        // Allow navigation within public routes
-        if (e.detail?.pathname?.startsWith('/public/')) {
-          return; // Allow
-        }
-        
-        // Block navigation to internal routes
-        if (e.detail?.pathname && !e.detail.pathname.startsWith('/public/')) {
-          e.preventDefault();
-          console.warn('Navigation to internal routes blocked from public view');
-        }
-      }
-    };
-
     // Block browser back/forward navigation to internal routes
     const handlePopState = (e) => {
       const currentPath = window.location.pathname;
@@ -48,27 +28,7 @@ const PublicLayout = ({ children }) => {
     };
   }, [location]);
 
-  // Prevent any programmatic navigation to internal routes
-  useEffect(() => {
-    const originalPush = navigate;
-    
-    // Override navigate function when in public mode
-    if (location.pathname.startsWith('/public/')) {
-      // Create a wrapped navigate function
-      const publicNavigate = (to, options) => {
-        const targetPath = typeof to === 'string' ? to : to?.pathname || '/';
-        
-        // Only allow navigation within public routes
-        if (targetPath.startsWith('/public/')) {
-          return originalPush(to, options);
-        }
-        
-        // Block navigation to internal routes
-        console.warn('Navigation blocked: Cannot navigate to internal routes from public view');
-        return false;
-      };
-    }
-  }, [location, navigate]);
+  // Navigation guard for public routes is handled by route configuration
 
   return (
     <div className="min-h-screen bg-gray-50">

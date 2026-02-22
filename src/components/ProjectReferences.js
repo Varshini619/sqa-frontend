@@ -58,6 +58,7 @@ const ProjectReferences = ({ versionId, user }) => {
     } else {
       console.warn('ProjectReferences: versionId is missing!');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId, filterPlatform]);
 
   // Handle file upload for Audacity projects

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { useContext } from 'react';
-import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import { API_BASE_URL } from '../config';
 
@@ -16,6 +14,7 @@ const VersionPage = () => {
 
   useEffect(() => {
     fetchVersionData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId]);
 
   const fetchVersionData = async () => {

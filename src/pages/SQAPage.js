@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useContext } from 'react';
@@ -22,7 +22,7 @@ const SQAPage = () => {
   const { versionId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { logout, user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   // State for project and version info
   const [projectName, setProjectName] = useState('');
@@ -290,6 +290,7 @@ const SQAPage = () => {
     }
     
     return filtered.sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Helper functions to manage custom metrics in localStorage
@@ -365,6 +366,7 @@ const SQAPage = () => {
     } catch (error) {
       console.error('Error initializing default metrics:', error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getGlobalCustomMetricsKey, saveGlobalCustomMetrics]);
 
   const addCustomMetric = useCallback((metric) => {
@@ -445,6 +447,7 @@ const SQAPage = () => {
     } finally {
       setLoadingMetrics(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId, loadCustomMetrics, loadGlobalCustomMetrics, initializeDefaultMetrics, filterMetricsForSubjective, searchParams]);
 
   // Function to refresh metrics after adding a custom one
@@ -513,6 +516,7 @@ const SQAPage = () => {
     } finally {
       setLoadingMetrics(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionId, loadCustomMetrics, loadGlobalCustomMetrics, initializeDefaultMetrics, filterMetricsForSubjective, searchParams]);
 
   // Handle adding a new metric
@@ -703,115 +707,6 @@ const SQAPage = () => {
     } catch (error) {
       console.error('[FRONTEND] Error uploading objective result:', error);
       throw error;
-    }
-  };
-
-  const handleFolderUpload = async (type, files) => {
-    try {
-      if (!files || files.length === 0) {
-        alert('No files selected');
-        return;
-      }
-
-      // Extract folder name from the first file's webkitRelativePath
-      const firstFile = files[0];
-      let folderName = null;
-      
-      console.log('=== FOLDER UPLOAD DEBUG ===');
-      console.log('Total files to upload:', files.length);
-      console.log('First file details:', {
-        name: firstFile.name,
-        webkitRelativePath: firstFile.webkitRelativePath,
-        type: firstFile.type,
-        size: firstFile.size
-      });
-      
-      // Check webkitRelativePath first (most reliable)
-      if (firstFile.webkitRelativePath) {
-        const pathParts = firstFile.webkitRelativePath.split(/[/\\]/);
-        folderName = pathParts[0]; // Get the folder name (e.g., "SDDATA_SAM_64GB")
-        console.log('✓ Extracted folder name from webkitRelativePath:', folderName);
-        console.log('  Full path:', firstFile.webkitRelativePath);
-        console.log('  Path parts:', pathParts);
-      } else {
-        console.warn('✗ No webkitRelativePath found on first file');
-      }
-      
-      // Fallback: try to get from file name if it contains a path
-      if (!folderName && firstFile.name && (firstFile.name.includes('/') || firstFile.name.includes('\\'))) {
-        const pathParts = firstFile.name.split(/[/\\]/);
-        folderName = pathParts[0];
-        console.log('✓ Extracted folder name from file name:', folderName);
-      }
-
-      if (!folderName) {
-        console.error('✗ Could not extract folder name! Files will be uploaded as individual files.');
-        console.error('  Make sure you are using the "Upload Folder" button, not "Upload Files"');
-      } else {
-        console.log('✓ Folder name to be used:', folderName);
-      }
-      console.log('========================');
-
-      // Upload each file from the folder
-      const uploadPromises = Array.from(files).map((file, index) => {
-        const formData = new FormData();
-        
-        // Send the original file (don't modify it)
-        formData.append('file', file);
-        formData.append('versionId', versionId);
-        formData.append('type', type);
-        
-        // Always send folderName if we have it (this is the most reliable way)
-        if (folderName) {
-          formData.append('folderName', folderName);
-          console.log(`[Upload ${index + 1}/${files.length}] Sending folderName: "${folderName}"`);
-          
-          // Verify it's actually in FormData (for debugging)
-          // Note: FormData.entries() doesn't work in all browsers, so we'll just log what we're adding
-        } else {
-          console.warn(`[Upload ${index + 1}/${files.length}] ⚠️ No folderName! webkitRelativePath:`, file.webkitRelativePath);
-        }
-        
-        // Also send webkitRelativePath if available (as backup)
-        if (file.webkitRelativePath) {
-          formData.append('webkitRelativePath', file.webkitRelativePath);
-          console.log(`[Upload ${index + 1}/${files.length}] Also sending webkitRelativePath: "${file.webkitRelativePath}"`);
-        }
-
-        return axios.post(`${API_BASE_URL}/api/sqa/reports/upload/${versionId}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        }).then(response => {
-          // Log the response to verify folder name was stored
-          console.log(`✓ File ${index + 1}/${files.length} uploaded:`, {
-            fileName: response.data.fileName,
-            hasFolder: response.data.fileName.includes('/') || response.data.fileName.includes('\\'),
-            folderName: folderName || 'none'
-          });
-          return response;
-        }).catch(error => {
-          console.error(`✗ Error uploading file ${index + 1}:`, error);
-          console.error('  Request data:', {
-            folderName: folderName || 'none',
-            fileName: file.name,
-            webkitRelativePath: file.webkitRelativePath || 'none'
-          });
-          throw error;
-        });
-      });
-
-      await Promise.all(uploadPromises);
-      
-      // Refresh the reports to show the new folder
-      await fetchReports(type);
-      
-      if (folderName) {
-        alert(`Successfully uploaded ${files.length} file(s) from folder "${folderName}".\n\nThe folder "${folderName}" should now appear in the list.`);
-      } else {
-        alert(`Warning: Uploaded ${files.length} file(s) but could not detect folder name.\n\nFiles were uploaded as individual files. Make sure you used the "Upload Folder" button.`);
-      }
-    } catch (error) {
-      console.error('Error uploading folder:', error);
-      alert('Failed to upload folder: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -1137,14 +1032,7 @@ const SQAPage = () => {
     if (foundFiles.length > 0) {
       // If we found both input and output files, extract a common base name
       if (inputFiles.length > 0 && outputFiles.length > 0) {
-        // Try to find common parts between input and output file names
-        const inputName = inputFiles[0].fileName.toLowerCase();
-        const outputName = outputFiles[0].fileName.toLowerCase();
-        
-        // Extract the base name from input file (usually the simpler name)
-        // Remove common prefixes like "v3_ndp120_ep133_" from output files
-        const baseName = inputName;
-        highlightKey = inputFiles[0].fileName; // Use input file name as the key
+        highlightKey = inputFiles[0].fileName;
         
         console.log(`[Highlight] Found both input and output files. Using input file name for highlight: ${highlightKey}`);
       } else if (inputFiles.length > 0) {
@@ -1223,25 +1111,18 @@ const SQAPage = () => {
           return false;
         });
         
-        // Determine which element to scroll to
-        let targetElement = inputFile || outputFile || targetElements[0];
-        
-        // If both files exist, try to scroll to show both
+        // If both files exist, determine scroll target priority
         if (inputFile && outputFile) {
           const inputRect = inputFile.getBoundingClientRect();
           const outputRect = outputFile.getBoundingClientRect();
-          
-          // Scroll to the one that's higher on the page (smaller top value)
-          targetElement = inputRect.top < outputRect.top ? inputFile : outputFile;
-          
-          // Calculate if both can fit in viewport
           const minTop = Math.min(inputRect.top, outputRect.top);
           const maxBottom = Math.max(inputRect.bottom, outputRect.bottom);
           const viewportHeight = window.innerHeight;
           
-          // If both files don't fit, scroll to show the input file (prioritize it)
           if ((maxBottom - minTop) > viewportHeight - 200) {
-            targetElement = inputFile;
+            // Both files don't fit - input file takes priority (handled in setTimeout below)
+          } else if (inputRect.top < outputRect.top) {
+            // Both fit - scroll handled in setTimeout below
           }
         }
         

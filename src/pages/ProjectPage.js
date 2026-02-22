@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
 import axios from 'axios';
-import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import VersionComparison from '../components/VersionComparison';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -21,6 +19,7 @@ const ProjectPage = () => {
 
   useEffect(() => {
     fetchProjectData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   const fetchProjectData = async () => {
