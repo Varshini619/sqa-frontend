@@ -8,6 +8,7 @@ import QuadrantView from '../components/QuadrantView';
 import ExcelMetricVisualization from '../components/ExcelMetricVisualization';
 import ProjectReferences from '../components/ProjectReferences';
 import ShareLink from '../components/ShareLink';
+import { API_BASE_URL } from '../config';
 import {
   FiUpload,
   FiDownload,
@@ -121,7 +122,7 @@ const SQAPage = () => {
 
   const fetchProjectInfo = useCallback(async () => {
     try {
-      const versionResponse = await axios.get(`http://localhost:5000/api/versions/${versionId}`);
+      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
       if (versionResponse.data) {
         // Set version number
         if (versionResponse.data.versionNumber) {
@@ -130,7 +131,7 @@ const SQAPage = () => {
         // Fetch project name
         if (versionResponse.data.projectId) {
           const projectResponse = await axios.get(
-            `http://localhost:5000/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
+            `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
           );
           setProjectName(projectResponse.data.name);
         }
@@ -145,7 +146,7 @@ const SQAPage = () => {
       if (type === 'objective') {
         // Use separate Objective API - only interacts with objective_results collection
         console.log('[FRONTEND] Fetching objective results from /api/objective');
-        const response = await axios.get(`http://localhost:5000/api/objective/${versionId}`);
+        const response = await axios.get(`${API_BASE_URL}/api/objective/${versionId}`);
         console.log('[FRONTEND] Objective results received:', response.data.length);
         
         // Transform Objective Results to match the reports format for display
@@ -163,7 +164,7 @@ const SQAPage = () => {
         // This endpoint returns SQAReport documents with type='subjective'
         console.log('[FRONTEND] Fetching subjective reports from /api/sqa/reports');
         const response = await axios.get(
-          `http://localhost:5000/api/sqa/reports/${versionId}?type=subjective`
+          `${API_BASE_URL}/api/sqa/reports/${versionId}?type=subjective`
         );
         console.log('[FRONTEND] Subjective reports received:', response.data.length);
         
@@ -196,7 +197,7 @@ const SQAPage = () => {
       }
       // Use separate Subjective API - only interacts with subjective_results collection
       console.log('[FRONTEND] Fetching subjective results from /api/subjective for versionId:', versionId);
-      const response = await axios.get(`http://localhost:5000/api/subjective/${versionId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/subjective/${versionId}`);
       console.log('[FRONTEND] Subjective results received:', response.data);
       console.log('[FRONTEND] Number of results:', response.data.length);
       
@@ -393,7 +394,7 @@ const SQAPage = () => {
       // Initialize default metrics first
       initializeDefaultMetrics();
       
-      const response = await axios.get(`http://localhost:5000/api/sqa-results/version-metrics/${versionId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/sqa-results/version-metrics/${versionId}`);
       const backendMetrics = response.data.metrics || [];
       
       // Load custom metrics from localStorage (version-specific and global)
@@ -452,7 +453,7 @@ const SQAPage = () => {
     setLoadingMetrics(true);
     try {
       initializeDefaultMetrics();
-      const response = await axios.get(`http://localhost:5000/api/sqa-results/version-metrics/${versionId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/sqa-results/version-metrics/${versionId}`);
       const backendMetrics = response.data.metrics || [];
       const versionCustomMetrics = loadCustomMetrics();
       const globalCustomMetrics = loadGlobalCustomMetrics();
@@ -666,7 +667,7 @@ const SQAPage = () => {
       formData.append('versionId', versionId);
       formData.append('type', type);
 
-      await axios.post(`http://localhost:5000/api/sqa/reports/upload/${versionId}`, formData, {
+      await axios.post(`${API_BASE_URL}/api/sqa/reports/upload/${versionId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -690,7 +691,7 @@ const SQAPage = () => {
       formData.append('finalExcel', excelFile);
 
       // Use separate Objective API - only interacts with objective_results collection
-      await axios.post('http://localhost:5000/api/objective/upload', formData, {
+      await axios.post(`${API_BASE_URL}/api/objective/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -777,7 +778,7 @@ const SQAPage = () => {
           console.log(`[Upload ${index + 1}/${files.length}] Also sending webkitRelativePath: "${file.webkitRelativePath}"`);
         }
 
-        return axios.post(`http://localhost:5000/api/sqa/reports/upload/${versionId}`, formData, {
+        return axios.post(`${API_BASE_URL}/api/sqa/reports/upload/${versionId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         }).then(response => {
           // Log the response to verify folder name was stored
@@ -875,7 +876,7 @@ const SQAPage = () => {
 
       // Use separate Subjective API - only interacts with subjective_results collection
       console.log('[FRONTEND] Uploading subjective result:', normalizedName);
-      const response = await axios.post('http://localhost:5000/api/subjective/upload', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/subjective/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -964,7 +965,7 @@ const SQAPage = () => {
 
       // Use separate Subjective API - only updates subjective_results collection
       console.log('[FRONTEND] Updating subjective result:', editingResultId);
-      await axios.put(`http://localhost:5000/api/subjective/${editingResultId}`, formData, {
+      await axios.put(`${API_BASE_URL}/api/subjective/${editingResultId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -988,7 +989,7 @@ const SQAPage = () => {
     try {
       // Use separate Subjective API - only deletes from subjective_results collection
       console.log('[FRONTEND] Deleting subjective result:', resultId);
-      await axios.delete(`http://localhost:5000/api/subjective/${resultId}`);
+      await axios.delete(`${API_BASE_URL}/api/subjective/${resultId}`);
       console.log('[FRONTEND] Subjective result deleted successfully');
       fetchSqaResults();
     } catch (error) {
@@ -1004,14 +1005,14 @@ const SQAPage = () => {
       if (type === 'objective') {
         // Use separate Objective API - only deletes from objective_results collection
         console.log('[FRONTEND] Deleting objective result:', reportId);
-        await axios.delete(`http://localhost:5000/api/objective/${reportId}`);
+        await axios.delete(`${API_BASE_URL}/api/objective/${reportId}`);
         console.log('[FRONTEND] Objective result deleted successfully');
         // Refresh ONLY objective reports
         await fetchReports('objective');
       } else if (type === 'subjective') {
         // Delete SQA Report (subjective reports are stored as SQA Reports)
         console.log('[FRONTEND] Deleting subjective report:', reportId);
-        await axios.delete(`http://localhost:5000/api/sqa/reports/${reportId}`);
+        await axios.delete(`${API_BASE_URL}/api/sqa/reports/${reportId}`);
         console.log('[FRONTEND] Subjective report deleted successfully');
         // Refresh ONLY subjective reports
         await fetchReports('subjective');
@@ -1025,7 +1026,7 @@ const SQAPage = () => {
 
   const handleDownload = (filePath, fileName) => {
     // File path is already relative from uploads directory
-    window.open(`http://localhost:5000/uploads/${filePath}`, '_blank');
+    window.open(`${API_BASE_URL}/uploads/${filePath}`, '_blank');
   };
 
   const handleApplyFilters = async () => {
@@ -1049,7 +1050,7 @@ const SQAPage = () => {
 
     setLoadingFilter(true);
     try {
-      const response = await axios.post(`http://localhost:5000/api/sqa/${versionId}/filter`, {
+      const response = await axios.post(`${API_BASE_URL}/api/sqa/${versionId}/filter`, {
         metric: filters.metric || undefined,
         operation: filters.operation || undefined,
         value: filters.value || undefined,
@@ -1430,7 +1431,7 @@ const SQAPage = () => {
       window.addEventListener('scroll', debouncedScrollHandler, { passive: true });
     } else if (file.downloadUrl) {
       // Fallback: trigger download
-      window.open(`http://localhost:5000${file.downloadUrl}`, '_blank');
+      window.open(`${API_BASE_URL}${file.downloadUrl}`, '_blank');
     }
   };
 
@@ -2255,7 +2256,7 @@ const SQAPage = () => {
                               }
                             }}
                               >
-                                <source src={`http://localhost:5000/uploads/${file.filePath}`} type={file.mimeType} />
+                                <source src={`${API_BASE_URL}/uploads/${file.filePath}`} type={file.mimeType} />
                                 Your browser does not support the audio element.
                               </audio>
                             )}
@@ -2560,7 +2561,7 @@ const SQAPage = () => {
                               }
                             }}
                               >
-                                <source src={`http://localhost:5000/uploads/${file.filePath}`} type={file.mimeType} />
+                                <source src={`${API_BASE_URL}/uploads/${file.filePath}`} type={file.mimeType} />
                                 Your browser does not support the audio element.
                               </audio>
                             )}

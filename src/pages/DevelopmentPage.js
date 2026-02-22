@@ -5,6 +5,7 @@ import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import { FiUpload, FiDownload, FiTrash2, FiSave } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const DevelopmentPage = () => {
   const { versionId } = useParams();
@@ -25,10 +26,10 @@ const DevelopmentPage = () => {
 
   const fetchProjectInfo = async () => {
     try {
-      const versionResponse = await axios.get(`http://localhost:5000/api/versions/${versionId}`);
+      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
       if (versionResponse.data.projectId) {
         const projectResponse = await axios.get(
-          `http://localhost:5000/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
+          `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
         );
         setProjectName(projectResponse.data.name);
       }
@@ -39,7 +40,7 @@ const DevelopmentPage = () => {
 
   const fetchDevelopmentData = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/development/${versionId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/development/${versionId}`);
       setDevelopment(response.data);
       setNotes(response.data.notes || '');
     } catch (error) {
@@ -51,7 +52,7 @@ const DevelopmentPage = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/development/${versionId}`, {
+      await axios.put(`${API_BASE_URL}/api/development/${versionId}`, {
         notes
       });
       alert('Saved successfully!');
@@ -68,7 +69,7 @@ const DevelopmentPage = () => {
       formData.append('file', file);
       formData.append('versionId', versionId);
 
-      await axios.post(`http://localhost:5000/api/development/${versionId}/files`, formData, {
+      await axios.post(`${API_BASE_URL}/api/development/${versionId}/files`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -88,7 +89,7 @@ const DevelopmentPage = () => {
       formData.append('versionId', versionId);
       formData.append('folderName', `Folder_${Date.now()}`);
 
-      await axios.post(`http://localhost:5000/api/development/${versionId}/folders`, formData, {
+      await axios.post(`${API_BASE_URL}/api/development/${versionId}/folders`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -103,7 +104,7 @@ const DevelopmentPage = () => {
     if (!window.confirm('Are you sure you want to delete this file?')) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/development/${versionId}/files/${fileId}`);
+      await axios.delete(`${API_BASE_URL}/api/development/${versionId}/files/${fileId}`);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error deleting file:', error);
@@ -115,7 +116,7 @@ const DevelopmentPage = () => {
     if (!window.confirm('Are you sure you want to delete this folder?')) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/development/${versionId}/folders/${folderId}`);
+      await axios.delete(`${API_BASE_URL}/api/development/${versionId}/folders/${folderId}`);
       fetchDevelopmentData();
     } catch (error) {
       console.error('Error deleting folder:', error);
@@ -125,7 +126,7 @@ const DevelopmentPage = () => {
 
   const handleDownload = (filePath, fileName) => {
     // File path is already relative from uploads directory
-    window.open(`http://localhost:5000/uploads/${filePath}`, '_blank');
+    window.open(`${API_BASE_URL}/uploads/${filePath}`, '_blank');
   };
 
   if (loading) {

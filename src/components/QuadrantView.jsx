@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiDownload } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const QuadrantView = ({ quadrantData, onFileClick, filteredMetric }) => {
   const [hoveredDot, setHoveredDot] = useState(null);
@@ -111,7 +112,7 @@ const QuadrantView = ({ quadrantData, onFileClick, filteredMetric }) => {
       onFileClick(file);
     } else if (file.downloadUrl) {
       // Fallback: trigger download
-      window.open(`http://localhost:5000${file.downloadUrl}`, '_blank');
+      window.open(`${API_BASE_URL}${file.downloadUrl}`, '_blank');
     }
   };
 

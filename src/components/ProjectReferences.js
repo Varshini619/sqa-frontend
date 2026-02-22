@@ -12,6 +12,7 @@ import {
   FiLink,
   FiUpload
 } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const ProjectReferences = ({ versionId, user }) => {
   const [projectReferences, setProjectReferences] = useState([]);
@@ -38,8 +39,8 @@ const ProjectReferences = ({ versionId, user }) => {
     try {
       setLoading(true);
       const url = filterPlatform === 'all' 
-        ? `http://localhost:5000/api/project-references/version/${versionId}`
-        : `http://localhost:5000/api/project-references/version/${versionId}?platform=${filterPlatform}`;
+        ? `${API_BASE_URL}/api/project-references/version/${versionId}`
+        : `${API_BASE_URL}/api/project-references/version/${versionId}?platform=${filterPlatform}`;
       
       const response = await axios.get(url);
       setProjectReferences(response.data);
@@ -106,7 +107,7 @@ const ProjectReferences = ({ versionId, user }) => {
         uploadFormData.append('versionId', versionId);
         
         console.log('Uploading folder with', filesToUpload.length, 'files');
-        const response = await axios.post(`http://localhost:5000/api/project-references/upload-folder`, uploadFormData, config);
+        const response = await axios.post(`${API_BASE_URL}/api/project-references/upload-folder`, uploadFormData, config);
         
         return response.data.folderPath || response.data.path;
       } else {
@@ -119,13 +120,13 @@ const ProjectReferences = ({ versionId, user }) => {
         uploadFormData.append('versionId', versionId);
         
         console.log('Uploading single file:', fileOrFiles.name, fileOrFiles.size, 'bytes');
-        console.log('Upload URL:', 'http://localhost:5000/api/project-references/upload');
+        console.log('Upload URL:', `${API_BASE_URL}/api/project-references/upload`);
         console.log('FormData entries:');
         for (let pair of uploadFormData.entries()) {
           console.log('  ', pair[0], ':', pair[1] instanceof File ? `${pair[1].name} (${pair[1].size} bytes)` : pair[1]);
         }
         
-        const response = await axios.post(`http://localhost:5000/api/project-references/upload`, uploadFormData, config);
+        const response = await axios.post(`${API_BASE_URL}/api/project-references/upload`, uploadFormData, config);
         console.log('✅ Upload response:', response.status, response.data);
         
         return response.data.filePath || response.data.path;
@@ -217,18 +218,18 @@ const ProjectReferences = ({ versionId, user }) => {
 
       console.log('Making API request:', editingId ? 'PUT' : 'POST');
       console.log('URL:', editingId 
-        ? `http://localhost:5000/api/project-references/${editingId}`
-        : 'http://localhost:5000/api/project-references');
+        ? `${API_BASE_URL}/api/project-references/${editingId}`
+        : `${API_BASE_URL}/api/project-references`);
       console.log('Payload:', { ...payload, description: payload.description?.substring(0, 50) + '...' });
       console.log('Config headers:', config.headers);
 
       if (editingId) {
         // Update existing
-        const response = await axios.put(`http://localhost:5000/api/project-references/${editingId}`, payload, config);
+        const response = await axios.put(`${API_BASE_URL}/api/project-references/${editingId}`, payload, config);
         console.log('Update response:', response.status, response.data);
       } else {
         // Create new
-        const response = await axios.post('http://localhost:5000/api/project-references', payload, config);
+        const response = await axios.post(`${API_BASE_URL}/api/project-references`, payload, config);
         console.log('Create response:', response.status, response.data);
       }
 
@@ -309,7 +310,7 @@ const ProjectReferences = ({ versionId, user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/project-references/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/project-references/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -382,7 +383,7 @@ const ProjectReferences = ({ versionId, user }) => {
         // For file paths, construct the correct server URL
         // Remove leading slash if present, then prepend with uploads base URL
         const filePath = ref.link.startsWith('/') ? ref.link.substring(1) : ref.link;
-        const downloadUrl = `http://localhost:5000/uploads/${filePath}`;
+        const downloadUrl = `${API_BASE_URL}/uploads/${filePath}`;
         
         console.log('Downloading Audacity project:', {
           originalLink: ref.link,

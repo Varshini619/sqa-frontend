@@ -4,6 +4,7 @@ import axios from 'axios';
 import PublicLayout from '../components/PublicLayout';
 import ExcelMetricVisualization from '../components/ExcelMetricVisualization';
 import { FiDownload, FiFile, FiAlertCircle } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const PublicSQAPage = () => {
   const { token } = useParams();
@@ -23,7 +24,7 @@ const PublicSQAPage = () => {
       console.log('Fetching public data for token:', token?.substring(0, 10) + '...');
       
       const response = await axios.get(
-        `http://localhost:5000/api/share-links/public/${token}`,
+        `${API_BASE_URL}/api/share-links/public/${token}`,
         {
           timeout: 30000, // 30 second timeout
           headers: {
@@ -70,7 +71,7 @@ const PublicSQAPage = () => {
   const handleDownload = async (filePath, fileName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/uploads/${filePath}`,
+        `${API_BASE_URL}/uploads/${filePath}`,
         { responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -307,7 +308,7 @@ const PublicSQAPage = () => {
                       <p>{new Date(ref.uploadedAt || ref.createdAt).toLocaleDateString()}</p>
                     </div>
                     <a
-                      href={ref.link.startsWith('http') ? ref.link : `http://localhost:5000/uploads/${ref.link}`}
+                      href={ref.link.startsWith('http') ? ref.link : `${API_BASE_URL}/uploads/${ref.link}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"

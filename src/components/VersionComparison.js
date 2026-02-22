@@ -4,6 +4,7 @@ import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiAward, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import CircularKPIComparison from './CircularKPIComparison';
 import * as XLSX from 'xlsx';
+import { API_BASE_URL } from '../config';
 
 const VersionComparison = ({ currentVersionId, projectId }) => {
   const [showComparison, setShowComparison] = useState(false);
@@ -117,7 +118,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
 
   const fetchVersions = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
       const versionsList = response.data.versions || [];
       setVersions(versionsList);
     } catch (error) {
@@ -130,10 +131,10 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       // Use the correct endpoint based on SQA type
       let response;
       if (sqaType === 'objective') {
-        response = await axios.get(`http://localhost:5000/api/objective/${versionId}`);
+        response = await axios.get(`${API_BASE_URL}/api/objective/${versionId}`);
       } else {
         // subjective or default
-        response = await axios.get(`http://localhost:5000/api/subjective/${versionId}`);
+        response = await axios.get(`${API_BASE_URL}/api/subjective/${versionId}`);
       }
       
       const resultKey = `${versionId}_${sqaType}`;
@@ -160,7 +161,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
     setLoadingMetrics(true);
     try {
       // Fetch common metrics from first two results, then check others
-      const response = await axios.post('http://localhost:5000/api/sqa-results/common-metrics', {
+      const response = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
         resultIdA: resultIds[0],
         resultIdB: resultIds[1]
       });
@@ -170,7 +171,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       // Check if other results have the same metrics
       if (resultIds.length > 2) {
         for (let i = 2; i < resultIds.length; i++) {
-          const checkResponse = await axios.post('http://localhost:5000/api/sqa-results/common-metrics', {
+          const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
             resultIdA: resultIds[0],
             resultIdB: resultIds[i]
           });
@@ -315,7 +316,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       
       if (!metricsToUse || metricsToUse.length === 0) {
         // Fetch common metrics from first two results
-        const metricsResponse = await axios.post('http://localhost:5000/api/sqa-results/common-metrics', {
+        const metricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
           resultIdA: resultIds[0],
           resultIdB: resultIds[1]
         });
@@ -324,7 +325,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         // Check other results
         if (resultIds.length > 2) {
           for (let i = 2; i < resultIds.length; i++) {
-            const checkResponse = await axios.post('http://localhost:5000/api/sqa-results/common-metrics', {
+            const checkResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
               resultIdA: resultIds[0],
               resultIdB: resultIds[i]
             });
@@ -353,7 +354,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         for (let i = 0; i < resultIds.length; i++) {
           try {
             // Compare with first result to get average
-            const response = await axios.post('http://localhost:5000/api/sqa-results/average-metrics', {
+            const response = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
               resultIdA: resultIds[0],
               resultIdB: resultIds[i],
               metricName,
@@ -423,7 +424,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
       
       // Send the metric name as-is first (backend handles flexible matching)
       // The backend will handle case-insensitive matching and variations like "Noise Suppression" vs "noise suppression"
-      const response = await axios.post('http://localhost:5000/api/sqa-results/compare', {
+      const response = await axios.post(`${API_BASE_URL}/api/sqa-results/compare`, {
         resultIdA: resultA,
         resultIdB: resultB,
         metricName: metricName.trim(), // Trim whitespace
@@ -517,7 +518,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
         // Get common metrics
         let commonMetrics = [];
         try {
-          const commonMetricsResponse = await axios.post('http://localhost:5000/api/sqa-results/common-metrics', {
+          const commonMetricsResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/common-metrics`, {
             resultIdA: resultIdA,
             resultIdB: resultIdB
           });
@@ -548,7 +549,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
           
           for (const metricName of commonMetrics) {
             try {
-              const avgResponse = await axios.post('http://localhost:5000/api/sqa-results/average-metrics', {
+              const avgResponse = await axios.post(`${API_BASE_URL}/api/sqa-results/average-metrics`, {
                 resultIdA: baselineResultId,
                 resultIdB: sel.resultId,
                 metricName: metricName,
@@ -626,7 +627,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
           // Fetch Excel file - normalize path like ExcelMetricVisualization does
           const filePath = result.finalExcel.filePath || result.finalExcel.filepath;
           const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-          const fileUrl = `http://localhost:5000/uploads/${normalizedPath}`;
+          const fileUrl = `${API_BASE_URL}/uploads/${normalizedPath}`;
           
           console.log(`[NoiseLevel] Loading Excel file from: ${fileUrl}`);
           
@@ -1308,7 +1309,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
                                     onPlay={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <source src={`http://localhost:5000${item.audioUrlA}`} type="audio/wav" />
+                                    <source src={`${API_BASE_URL}${item.audioUrlA}`} type="audio/wav" />
                                     Your browser does not support the audio element.
                                   </audio>
                                 )}
@@ -1362,7 +1363,7 @@ const VersionComparison = ({ currentVersionId, projectId }) => {
                                     onPlay={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <source src={`http://localhost:5000${item.audioUrlB}`} type="audio/wav" />
+                                    <source src={`${API_BASE_URL}${item.audioUrlB}`} type="audio/wav" />
                                     Your browser does not support the audio element.
                                   </audio>
                                 )}

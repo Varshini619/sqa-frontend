@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { FiDownload, FiFileText, FiImage, FiToggleLeft, FiToggleRight, FiPlus, FiX, FiSearch } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) => {
   const [selectedReport, setSelectedReport] = useState(null);
@@ -158,7 +159,7 @@ const ExcelMetricVisualization = ({ reports, versionId, isPublicView = false }) 
       // Handle both filePath formats (with or without leading slash)
       const filePath = report.filePath || report.filepath;
       const normalizedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-      const fileUrl = `http://localhost:5000/uploads/${normalizedPath}`;
+      const fileUrl = `${API_BASE_URL}/uploads/${normalizedPath}`;
       
       console.log('Loading Excel file from:', fileUrl);
       

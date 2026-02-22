@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiShare2, FiCopy, FiCheck, FiX, FiExternalLink } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const ShareLink = ({ versionId, type }) => {
   const [shareLink, setShareLink] = useState(null);
@@ -27,7 +28,7 @@ const ShareLink = ({ versionId, type }) => {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/share-links/${versionId}/${type}`,
+        `${API_BASE_URL}/api/share-links/${versionId}/${type}`,
         {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -87,7 +88,7 @@ const ShareLink = ({ versionId, type }) => {
       console.log('Generating share link:', { versionId, type, expiresInDays: expiresInDaysValue });
 
       const response = await axios.post(
-        'http://localhost:5000/api/share-links/generate',
+        `${API_BASE_URL}/api/share-links/generate`,
         {
           versionId,
           type,
@@ -152,7 +153,7 @@ const ShareLink = ({ versionId, type }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:5000/api/share-links/${shareLink.id}`,
+        `${API_BASE_URL}/api/share-links/${shareLink.id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

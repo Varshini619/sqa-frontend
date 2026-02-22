@@ -6,6 +6,7 @@ import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import VersionComparison from '../components/VersionComparison';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 const ProjectPage = () => {
   const { projectId } = useParams();
@@ -24,7 +25,7 @@ const ProjectPage = () => {
 
   const fetchProjectData = async () => {
     try {
-      const projectResponse = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
+      const projectResponse = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
       setProject(projectResponse.data);
       setVersions(projectResponse.data.versions || []);
     } catch (error) {
@@ -37,7 +38,7 @@ const ProjectPage = () => {
   const handleCreateVersion = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/versions', {
+      await axios.post(`${API_BASE_URL}/api/versions`, {
         projectId: projectId,
         versionNumber: newVersionNumber,
         description: newVersionDesc
@@ -63,7 +64,7 @@ const ProjectPage = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/versions/${versionId}`, {
+      await axios.delete(`${API_BASE_URL}/api/versions/${versionId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

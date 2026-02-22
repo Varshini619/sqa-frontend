@@ -6,6 +6,7 @@ import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import ProjectComparison from '../components/ProjectComparison';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { API_BASE_URL } from '../config';
 
 // Hero Headline Component with Word-by-Word Animation
 const HeroHeadline = ({ text }) => {
@@ -76,7 +77,7 @@ const Home = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/projects');
+      const response = await axios.get(`${API_BASE_URL}/api/projects`);
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -88,7 +89,7 @@ const Home = () => {
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/projects', {
+      await axios.post(`${API_BASE_URL}/api/projects`, {
         name: newProjectName,
         description: newProjectDesc
       });
@@ -111,7 +112,7 @@ const Home = () => {
   const handleCreateVersion = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/versions', {
+      await axios.post(`${API_BASE_URL}/api/versions`, {
         projectId: selectedProject._id,
         versionNumber: newVersionNumber,
         description: newVersionDesc
@@ -135,7 +136,7 @@ const Home = () => {
 
     try {
       console.log('Attempting to delete project:', { projectId, projectName });
-      const url = `http://localhost:5000/api/projects/${projectId}`;
+      const url = `${API_BASE_URL}/api/projects/${projectId}`;
       console.log('Delete URL:', url);
       
       const response = await axios.delete(url, {

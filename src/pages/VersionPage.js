@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
+import { API_BASE_URL } from '../config';
 
 const VersionPage = () => {
   const { versionId } = useParams();
@@ -19,12 +20,12 @@ const VersionPage = () => {
 
   const fetchVersionData = async () => {
     try {
-      const versionResponse = await axios.get(`http://localhost:5000/api/versions/${versionId}`);
+      const versionResponse = await axios.get(`${API_BASE_URL}/api/versions/${versionId}`);
       setVersion(versionResponse.data);
       
       if (versionResponse.data.projectId) {
         const projectResponse = await axios.get(
-          `http://localhost:5000/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
+          `${API_BASE_URL}/api/projects/${versionResponse.data.projectId._id || versionResponse.data.projectId}`
         );
         setProject(projectResponse.data);
       }
