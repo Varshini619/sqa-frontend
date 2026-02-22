@@ -5,7 +5,7 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import ProjectComparison from '../components/ProjectComparison';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiBarChart2 } from 'react-icons/fi';
 import { API_BASE_URL } from '../config';
 
 // Hero Headline Component with Word-by-Word Animation
@@ -28,15 +28,15 @@ const HeroHeadline = ({ text }) => {
 
   return (
     <h1 
-      className="mb-6 leading-tight" 
+      className="leading-tight" 
       style={{ 
-        fontSize: 'clamp(2.25rem, 4.5vw, 3.5rem)',
+        fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)',
         fontWeight: 700,
-        letterSpacing: '-0.5px',
+        letterSpacing: '-0.3px',
         color: '#0F172A', 
         fontFamily: 'Inter, system-ui, sans-serif',
         margin: '0 auto',
-        lineHeight: '1.2'
+        lineHeight: '1.25'
       }}
     >
       {words.map((word, index) => (
@@ -68,6 +68,7 @@ const Home = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [newVersionNumber, setNewVersionNumber] = useState('');
   const [newVersionDesc, setNewVersionDesc] = useState('');
+  const [showProjectComparison, setShowProjectComparison] = useState(false);
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -187,49 +188,68 @@ const Home = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <section style={{ paddingTop: '100px', paddingBottom: '80px' }}>
-          <div className="text-center mx-auto" style={{ maxWidth: '900px' }}>
+        <section style={{ paddingTop: '36px', paddingBottom: '20px' }}>
+          <div className="text-center mx-auto" style={{ maxWidth: '800px' }}>
             <HeroHeadline text="AI-Powered Audio Intelligence Platform for Edge Devices" />
-            <h2 
-              className="mb-6" 
-              style={{ 
-                fontSize: 'clamp(1.125rem, 1.8vw, 1.375rem)',
-                fontWeight: 500,
-                color: '#64748B', 
-                fontFamily: 'Inter, system-ui, sans-serif',
-                lineHeight: '1.5',
-                marginTop: '24px'
-              }}
-            >
-              Miniaturizing AI to Power Intelligent Hearables and Wearables.
-            </h2>
             <p 
               className="mx-auto leading-relaxed" 
               style={{ 
-                fontSize: '1.125rem',
+                fontSize: '1rem',
                 fontWeight: 400,
                 color: '#64748B', 
                 fontFamily: 'Inter, system-ui, sans-serif',
-                maxWidth: '700px',
+                maxWidth: '600px',
                 lineHeight: '1.6',
-                marginBottom: '32px'
+                marginTop: '8px'
               }}
             >
-              A centralized platform to analyze, compare and optimize IPHIPI's AI audio models with precision and speed.
+              Analyze, compare and optimize IPHIPI's AI audio models with precision and speed.
             </p>
           </div>
         </section>
 
-        {/* Project Comparison Section */}
-        {projects.length >= 2 && (
-          <section data-project-comparison style={{ paddingTop: '60px', paddingBottom: '40px' }}>
-            <ProjectComparison />
-          </section>
-        )}
-
         {/* Dashboard Section - Projects Grid */}
-        <section style={{ paddingTop: '80px', paddingBottom: '80px' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section style={{ paddingTop: '24px', paddingBottom: '48px' }}>
+          {/* Section header with Compare button */}
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-slate-800" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              Your Projects
+            </h2>
+            {projects.length >= 2 && !showProjectComparison && (
+              <button
+                onClick={() => setShowProjectComparison(true)}
+                className="flex items-center gap-1.5 text-sm font-medium transition-all duration-200"
+                style={{ 
+                  color: '#4F46E5',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  background: 'none',
+                  border: '1.5px solid #C7D2FE',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#EEF2FF';
+                  e.currentTarget.style.borderColor = '#A5B4FC';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = '#C7D2FE';
+                }}
+              >
+                <FiBarChart2 size={15} />
+                Compare
+              </button>
+            )}
+          </div>
+
+          {/* Comparison panel */}
+          {showProjectComparison && projects.length >= 2 && (
+            <div className="mb-6">
+              <ProjectComparison onClose={() => setShowProjectComparison(false)} />
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProjects.map((project) => {
             // Check if this project matches the search term
             const isHighlighted = searchTerm.trim() && (
@@ -266,8 +286,8 @@ const Home = () => {
                   navigate(`/project/${project._id}`);
                 }}
               >
-                <div style={{ padding: '24px' }}>
-                  <div className="flex items-start justify-between mb-4">
+                <div style={{ padding: '20px' }}>
+                  <div className="flex items-start justify-between mb-2">
                     <h3 className={`text-xl font-bold transition-colors flex-1 ${
                       isHighlighted
                         ? 'text-indigo-900'
@@ -312,7 +332,7 @@ const Home = () => {
           {/* Add New Project Card */}
           <div
             onClick={() => setShowNewProjectModal(true)}
-            className="bg-white transition-all duration-300 cursor-pointer border-2 border-dashed flex flex-col items-center justify-center min-h-[200px] group"
+            className="bg-white transition-all duration-300 cursor-pointer border-2 border-dashed flex flex-col items-center justify-center min-h-[140px] group"
             style={{ 
               borderColor: '#CBD5E1',
               boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
@@ -330,10 +350,10 @@ const Home = () => {
               e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.06)';
             }}
           >
-            <div className="rounded-full p-4 mb-4 transition-colors" style={{ backgroundColor: '#EEF2FF' }}>
-              <FiPlus className="text-3xl" style={{ color: '#4F46E5' }} />
+            <div className="rounded-full p-3 mb-3 transition-colors" style={{ backgroundColor: '#EEF2FF' }}>
+              <FiPlus className="text-2xl" style={{ color: '#4F46E5' }} />
             </div>
-            <span className="font-semibold transition-colors text-base" style={{ color: '#64748B', fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <span className="font-semibold transition-colors text-sm" style={{ color: '#64748B', fontFamily: 'Inter, system-ui, sans-serif' }}>
               Add New Project
             </span>
           </div>

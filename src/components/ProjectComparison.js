@@ -4,8 +4,7 @@ import { FiX, FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiMinus, FiAward, 
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie, LineChart, Line } from 'recharts';
 import { API_BASE_URL } from '../config';
 
-const ProjectComparison = () => {
-  const [showComparison, setShowComparison] = useState(false);
+const ProjectComparison = ({ onClose }) => {
   const [projects, setProjects] = useState([]);
   
   // Multiple project selections - array of { projectId, versionId, resultId, projectName, versionNumber, allVersions, allResults, sqaType }
@@ -43,18 +42,15 @@ const ProjectComparison = () => {
   ];
 
   useEffect(() => {
-    if (showComparison) {
-      fetchProjects();
-      // Initialize with two empty project selections
-      if (selectedProjects.length === 0) {
-        setSelectedProjects([
-          { projectId: '', versionId: '', resultId: '', projectName: '', versionNumber: '', allVersions: false, allResults: false, sqaType: 'subjective' },
-          { projectId: '', versionId: '', resultId: '', projectName: '', versionNumber: '', allVersions: false, allResults: false, sqaType: 'subjective' }
-        ]);
-      }
+    fetchProjects();
+    if (selectedProjects.length === 0) {
+      setSelectedProjects([
+        { projectId: '', versionId: '', resultId: '', projectName: '', versionNumber: '', allVersions: false, allResults: false, sqaType: 'subjective' },
+        { projectId: '', versionId: '', resultId: '', projectName: '', versionNumber: '', allVersions: false, allResults: false, sqaType: 'subjective' }
+      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showComparison]);
+  }, []);
 
   // Fetch versions when a project is selected
   useEffect(() => {
@@ -1089,51 +1085,17 @@ const ProjectComparison = () => {
     }
   };
 
-  if (!showComparison) {
-    return (
-      <div>
-        <button
-          data-compare-projects-button
-          onClick={() => setShowComparison(true)}
-          className="flex items-center gap-2 text-base font-semibold text-white transition-all duration-200"
-          style={{ 
-            backgroundColor: '#4F46E5',
-            borderRadius: '12px',
-            padding: '12px 28px',
-            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.2)',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#4338CA';
-            e.target.style.boxShadow = '0 4px 12px rgba(79, 70, 229, 0.3)';
-            e.target.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#4F46E5';
-            e.target.style.boxShadow = '0 2px 8px rgba(79, 70, 229, 0.2)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-        >
-          Compare Models
-          <FiArrowRight size={18} />
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white rounded-lg p-6 border border-slate-200" style={{ boxShadow: '0 4px 6px -1px rgba(30, 58, 138, 0.2), 0 2px 4px -1px rgba(30, 58, 138, 0.15)' }}>
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-xl font-semibold text-slate-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>Project Comparison</h2>
         <button
           onClick={() => {
-            setShowComparison(false);
             setComparisonData(null);
             setSelectedProjects([]);
             setProjectVersions({});
             setVersionResults({});
+            if (onClose) onClose();
           }}
           className="text-slate-400 hover:text-slate-600"
         >
